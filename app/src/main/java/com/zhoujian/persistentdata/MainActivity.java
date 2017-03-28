@@ -3,65 +3,82 @@ package com.zhoujian.persistentdata;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.widget.EditText;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
-public class MainActivity extends AppCompatActivity
-{
+public class MainActivity extends AppCompatActivity {
 
-    private EditText mEdit;
+    private EditText edit;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mEdit = (EditText) findViewById(R.id.edit);
-
+        edit = (EditText) findViewById(R.id.edit);
+        String inputText = loadData();
+        if (!TextUtils.isEmpty(inputText)) {
+            edit.setText(inputText);
+            edit.setSelection(inputText.length());
+        }
     }
 
     @Override
-    protected void onDestroy()
-    {
+    protected void onDestroy() {
         super.onDestroy();
-        String text = mEdit.getText().toString().trim();
-        saveData(text);
+        String inputText = edit.getText().toString();
+        saveData(inputText);
     }
 
-    //保存数据
-    private void saveData(String text)
-    {
+    public void saveData(String inputText) {
         FileOutputStream out = null;
-        BufferedWriter bfWriter = null;
-        try
-        {
-
-            //第一个参数是文件名，所有文件都默认存储到data/data/包名/files/目录下的
-            //第二个参数是文件的操作模式
-            //MODE_PRIVATE:默认的操作模式，表示指定同样文件名的时候，所写的内容会覆盖原文件中的内容
-            //MODE_APPEND:表示如果该文件存在，就往文件里追加内容，不存在就创建新文件
+        BufferedWriter writer = null;
+        try {
             out = openFileOutput("file", Context.MODE_PRIVATE);
-            bfWriter = new BufferedWriter(new OutputStreamWriter(out));
-            bfWriter.write(text);
-        }
-        catch (Exception e)
-        {
+            writer = new BufferedWriter(new OutputStreamWriter(out));
+            writer.write(inputText);
+        } catch (IOException e) {
             e.printStackTrace();
-        }
-        finally
-        {
-            try
-            {
-                if (bfWriter != null)
-                {
-                    bfWriter.close();
+        } finally {
+            try {
+                if (writer != null) {
+                    writer.close();
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
+
+    public String loadData() {
+        FileInputStream in = null;
+        BufferedReader reader = null;
+        StringBuilder sb = new StringBuilder();
+        try {
+            in = openFileInput("file");
+            reader = new BufferedReader(new InputStreamReader(in));
+            String line = "";
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return sb.toString();
+    }
+
 }
